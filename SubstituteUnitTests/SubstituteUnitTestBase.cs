@@ -20,7 +20,17 @@ namespace SubstituteUnitTests
             public ParameterInfo[] Parameters { get; }
         }
 
-        private ConstructorInfo GetConstructorToCreate()
+        protected T CreateUnit(Action<IParameterSetupHelper> parametersSetup = null)
+        {
+            var constructorWithParameters = GetConstructorToSubstitute();
+            var parameters = GetParametersSubstitute(constructorWithParameters);
+
+            SetupParameters(parametersSetup, parameters);
+
+            return InvokeConstructor(constructorWithParameters, parameters);
+        }
+
+        private ConstructorWithParameters GetConstructorToSubstitute()
         {
             var unitType = typeof(T);
             var allConstructors = GetPublicConstructors(unitType);
@@ -37,7 +47,7 @@ namespace SubstituteUnitTests
                 throw new InvalidOperationException("Found too many constructors to substitute");
             }
 
-            return constructorParametersGroup.First().ConstructorInfo;
+            return constructorParametersGroup.First();
         }
 
         private IGrouping<int, ConstructorWithParameters> GetConstructorWithMaxParameters(IEnumerable<ConstructorWithParameters> constructors)
@@ -64,15 +74,15 @@ namespace SubstituteUnitTests
         {
             return unitType.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
         }
-
-        protected T CreateUnit(Action<IParameterSetupHelper> parametersSetup = null)
+                
+        private T InvokeConstructor(ConstructorWithParameters constructorWithParameters, object[] parameters)
         {
-            var constructor = GetConstructorToCreate();
-            var parameters = constructor.GetParameters().Select(CreateParameterSubstitute).ToArray();
+            return constructorWithParameters.ConstructorInfo.Invoke(parameters) as T;
+        }
 
-            SetupParameters(parametersSetup, parameters);
-
-            return constructor.Invoke(parameters) as T;
+        private object[] GetParametersSubstitute(ConstructorWithParameters constructorWithParameters)
+        {
+            return constructorWithParameters.Parameters.Select(CreateParameterSubstitute).ToArray();
         }
 
         private void SetupParameters(Action<ParameterSetupHelper> parametersSetup, object[] parameters)
