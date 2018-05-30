@@ -1,5 +1,6 @@
 ﻿using NSubstitute;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -7,70 +8,71 @@ namespace SubstituteUnitTests
 {
     public abstract class SubstituteUnitTestBase<T> where T : class
     {
-        private static ConstructorInfo _defaultConstructorInfo;
-        private static ConstructorInfo _interfacesOnlyConstructorInfo;
-        private static ParameterInfo[] _interfacesOnlyConstructorParameterInfos;
+        private class ConstructorWithParameters
+        {
+            public ConstructorWithParameters(ConstructorInfo constructorInfo)
+            {
+                ConstructorInfo = constructorInfo;
+                Parameters = constructorInfo.GetParameters();
+            }
 
-        static SubstituteUnitTestBase()
+            public ConstructorInfo ConstructorInfo { get; }
+            public ParameterInfo[] Parameters { get; }
+        }
+
+        private ConstructorInfo GetConstructorToCreate()
         {
             var unitType = typeof(T);
-            var constructorInfos = GetPublicConstructors(unitType);
+            var allConstructors = GetPublicConstructors(unitType);
+            var validConstructors = GetValidConstructors(allConstructors);
+            var constructorParametersGroup = GetConstructorWithMaxParameters(validConstructors);
 
-            foreach (var constructorInfo in constructorInfos)
+            if (constructorParametersGroup == null)
             {
-                var parameters = constructorInfo.GetParameters();
-
-                if (IsDefaultCtor(parameters))
-                {
-                    _defaultConstructorInfo = constructorInfo;
-                }
-                else if (IsCtorWithInterfacesOnly(parameters))
-                {
-                    _interfacesOnlyConstructorInfo = constructorInfo;
-                    _interfacesOnlyConstructorParameterInfos = constructorInfo.GetParameters();
-                }
+                throw new InvalidOperationException("Found no relevant constructors to substitute");
             }
+
+            if (constructorParametersGroup.Count() > 1)
+            {
+                throw new InvalidOperationException("Found too many constructors to substitute");
+            }
+
+            return constructorParametersGroup.First().ConstructorInfo;
         }
 
-        private static bool IsCtorWithInterfacesOnly(ParameterInfo[] parameters)
+        private IGrouping<int, ConstructorWithParameters> GetConstructorWithMaxParameters(IEnumerable<ConstructorWithParameters> constructors)
         {
-            return parameters.All(x => x.ParameterType.IsInterface);
+            return constructors
+                .GroupBy(x => x.Parameters.Length)
+                .OrderByDescending(x => x.Key)
+                .FirstOrDefault();
         }
 
-        private static bool IsDefaultCtor(ParameterInfo[] parameters)
+        private IEnumerable<ConstructorWithParameters> GetValidConstructors(IEnumerable<ConstructorInfo> constructors)
+        {            
+            return constructors
+                .Select(x => new ConstructorWithParameters(x))
+                .Where(IsCtorWithInterfacesOnly);
+        }
+
+        private bool IsCtorWithInterfacesOnly(ConstructorWithParameters constructorWithParameters)
         {
-            return !parameters.Any();
+            return constructorWithParameters.Parameters.All(x => x.ParameterType.IsInterface);
         }
 
-        private static ConstructorInfo[] GetPublicConstructors(Type unitType)
+        private ConstructorInfo[] GetPublicConstructors(Type unitType)
         {
             return unitType.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
         }
 
         protected T CreateUnit(Action<IParameterSetupHelper> parametersSetup = null)
         {
-            if (_interfacesOnlyConstructorInfo != null)
-            {
-                return CreateUnitUsingInterfacesOnlyConstructor(parametersSetup);
-            }
-
-            if (_defaultConstructorInfo != null)
-            {
-                return CreateUnitUsingDefaultConstructor();
-            }
-
-            throw new InvalidOperationException($"Class {typeof(T).Name} has no valid constructors to substitute");
-        }
-
-        private T CreateUnitUsingInterfacesOnlyConstructor(Action<ParameterSetupHelper> parametersSetup)
-        {
-            object[] parameters = _interfacesOnlyConstructorParameterInfos
-                .Select(CreateParameterSubstitute)
-                .ToArray();
+            var constructor = GetConstructorToCreate();
+            var parameters = constructor.GetParameters().Select(CreateParameterSubstitute).ToArray();
 
             SetupParameters(parametersSetup, parameters);
 
-            return _interfacesOnlyConstructorInfo.Invoke(parameters) as T;
+            return constructor.Invoke(parameters) as T;
         }
 
         private void SetupParameters(Action<ParameterSetupHelper> parametersSetup, object[] parameters)
@@ -85,12 +87,6 @@ namespace SubstituteUnitTests
         private object CreateParameterSubstitute(ParameterInfo parameterInfo)
         {
             return Substitute.For(new[] { parameterInfo.ParameterType }, new object[0]);
-        }
-
-        private T CreateUnitUsingDefaultConstructor()
-        {
-            object[] parameters = new object[0];
-            return _defaultConstructorInfo.Invoke(parameters) as T;
         }
     }
 }
