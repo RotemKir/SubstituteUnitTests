@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace SubstituteUnitTests
 {
-    public class ParameterSetupHelper
+    internal class ParameterSetupHelper : IParameterSetupHelper
     {
         private readonly object[] _parameters;
 

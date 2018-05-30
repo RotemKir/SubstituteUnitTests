@@ -47,7 +47,7 @@ namespace SubstituteUnitTests
             return unitType.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
         }
 
-        protected T CreateUnit(Action<ParameterSetupHelper> parametersSetup = null)
+        protected T CreateUnit(Action<IParameterSetupHelper> parametersSetup = null)
         {
             if (_interfacesOnlyConstructorInfo != null)
             {
@@ -82,9 +82,9 @@ namespace SubstituteUnitTests
             }
         }
 
-        private object CreateParameterSubstitute(ParameterInfo x)
+        private object CreateParameterSubstitute(ParameterInfo parameterInfo)
         {
-            return Substitute.For(new[] { x.ParameterType }, new object[0]);
+            return Substitute.For(new[] { parameterInfo.ParameterType }, new object[0]);
         }
 
         private T CreateUnitUsingDefaultConstructor()
