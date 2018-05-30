@@ -68,12 +68,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClassWithManyInterfacesInCtorTests.cs" />
+    <Compile Include="ClassWithNoValidCtorsTests.cs" />
     <Compile Include="ClassWithSingleInterfaceInCtorTests.cs" />
     <Compile Include="ClassWithDefaultCtorTests.cs" />
     <Compile Include="ParameterSetupHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestClasses\ClassWithDefaultCtor.cs" />
     <Compile Include="TestClasses\ClassWithManyInterfacesInCtor.cs" />
+    <Compile Include="TestClasses\ClassWithNoValidCtors.cs" />
     <Compile Include="TestClasses\ClassWithSingleInterfaceInCtor.cs" />
     <Compile Include="TestClasses\Interfaces.cs" />
   </ItemGroup>

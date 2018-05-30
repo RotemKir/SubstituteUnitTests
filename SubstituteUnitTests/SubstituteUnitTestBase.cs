@@ -59,7 +59,7 @@ namespace SubstituteUnitTests
                 return CreateUnitUsingDefaultConstructor();
             }
 
-            return null;
+            throw new InvalidOperationException($"Class {typeof(T).Name} has no valid constructors to substitute");
         }
 
         private T CreateUnitUsingInterfacesOnlyConstructor(Action<ParameterSetupHelper> parametersSetup)
