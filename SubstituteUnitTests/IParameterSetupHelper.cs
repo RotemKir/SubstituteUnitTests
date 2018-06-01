@@ -2,6 +2,7 @@
 {
     public interface IParameterSetupHelper
     {
-        T Get<T>() where T : class;
+        T Get<T>(string name = null) where T : class;
+        T Set<T>(T value, string name = null) where T : class;
     }
 }

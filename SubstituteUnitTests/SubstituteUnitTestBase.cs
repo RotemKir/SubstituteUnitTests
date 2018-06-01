@@ -1,4 +1,5 @@
 ﻿using NSubstitute;
+using SubstituteUnitTests.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,31 +7,24 @@ using System.Reflection;
 
 namespace SubstituteUnitTests
 {
-    public abstract class SubstituteUnitTestBase<T> where T : class
+    public abstract partial class SubstituteUnitTestBase<T> where T : class
     {
-        private class ConstructorWithParameters
-        {
-            public ConstructorWithParameters(ConstructorInfo constructorInfo)
-            {
-                ConstructorInfo = constructorInfo;
-                Parameters = constructorInfo.GetParameters();
-            }
-
-            public ConstructorInfo ConstructorInfo { get; }
-            public ParameterInfo[] Parameters { get; }
-        }
-
         protected T CreateUnit(Action<IParameterSetupHelper> parametersSetup = null)
         {
-            var constructorWithParameters = GetConstructorToSubstitute();
-            var parameters = GetParametersSubstitute(constructorWithParameters);
+            var constructor = GetConstructorToSubstitute();
+            FillParametersSubstitute(constructor);
+            SetupParameters(parametersSetup, constructor);
+            var parameters = GetParameterValues(constructor);
 
-            SetupParameters(parametersSetup, parameters);
-
-            return InvokeConstructor(constructorWithParameters, parameters);
+            return InvokeConstructor(constructor, parameters);
         }
 
-        private ConstructorWithParameters GetConstructorToSubstitute()
+        private object[] GetParameterValues(Constructor constructor)
+        {
+            return constructor.Parameters.Select(x => x.Value).ToArray();
+        }
+
+        private Constructor GetConstructorToSubstitute()
         {
             var unitType = typeof(T);
             var allConstructors = GetPublicConstructors(unitType);
@@ -50,7 +44,7 @@ namespace SubstituteUnitTests
             return constructorParametersGroup.First();
         }
 
-        private IGrouping<int, ConstructorWithParameters> GetConstructorWithMaxParameters(IEnumerable<ConstructorWithParameters> constructors)
+        private IGrouping<int, Constructor> GetConstructorWithMaxParameters(IEnumerable<Constructor> constructors)
         {
             return constructors
                 .GroupBy(x => x.Parameters.Length)
@@ -58,16 +52,16 @@ namespace SubstituteUnitTests
                 .FirstOrDefault();
         }
 
-        private IEnumerable<ConstructorWithParameters> GetValidConstructors(IEnumerable<ConstructorInfo> constructors)
+        private IEnumerable<Constructor> GetValidConstructors(IEnumerable<ConstructorInfo> constructors)
         {            
             return constructors
-                .Select(x => new ConstructorWithParameters(x))
+                .Select(x => new Constructor(x))
                 .Where(IsCtorWithInterfacesOnly);
         }
 
-        private bool IsCtorWithInterfacesOnly(ConstructorWithParameters constructorWithParameters)
+        private bool IsCtorWithInterfacesOnly(Constructor constructor)
         {
-            return constructorWithParameters.Parameters.All(x => x.ParameterType.IsInterface);
+            return constructor.Parameters.All(x => x.Type.IsInterface);
         }
 
         private ConstructorInfo[] GetPublicConstructors(Type unitType)
@@ -75,28 +69,31 @@ namespace SubstituteUnitTests
             return unitType.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
         }
                 
-        private T InvokeConstructor(ConstructorWithParameters constructorWithParameters, object[] parameters)
+        private T InvokeConstructor(Constructor constructorWithParameters, object[] parameters)
         {
             return constructorWithParameters.ConstructorInfo.Invoke(parameters) as T;
         }
 
-        private object[] GetParametersSubstitute(ConstructorWithParameters constructorWithParameters)
+        private void FillParametersSubstitute(Constructor constructor)
         {
-            return constructorWithParameters.Parameters.Select(CreateParameterSubstitute).ToArray();
+            foreach (var parameter in constructor.Parameters)
+            {
+                parameter.Value = CreateParameterSubstitute(parameter);
+            }
         }
 
-        private void SetupParameters(Action<ParameterSetupHelper> parametersSetup, object[] parameters)
+        private void SetupParameters(Action<IParameterSetupHelper> parametersSetup, Constructor constructor)
         {
             if (parametersSetup != null)
             {
-                var parametersSetupHelper = new ParameterSetupHelper(parameters);
+                var parametersSetupHelper = new ParameterSetupHelper(constructor.Parameters);
                 parametersSetup(parametersSetupHelper);
             }
         }
 
-        private object CreateParameterSubstitute(ParameterInfo parameterInfo)
+        private object CreateParameterSubstitute(IParameter parameter)
         {
-            return Substitute.For(new[] { parameterInfo.ParameterType }, new object[0]);
+            return Substitute.For(new[] { parameter.Type }, new object[0]);
         }
     }
 }

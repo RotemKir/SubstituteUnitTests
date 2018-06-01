@@ -71,6 +71,7 @@
     <Compile Include="ClassWithManyValidCtorsTests.cs" />
     <Compile Include="ClassWithManyValidCtorsWithSameAmountOfParametersTests.cs" />
     <Compile Include="ClassWithNoValidCtorsTests.cs" />
+    <Compile Include="ClassWithParametersSetupTests.cs" />
     <Compile Include="ClassWithSingleInterfaceInCtorTests.cs" />
     <Compile Include="ClassWithDefaultCtorTests.cs" />
     <Compile Include="ParameterSetupHelperTests.cs" />
