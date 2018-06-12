@@ -72,7 +72,7 @@ CreateUnit(setupHelper =>
 });
 ```
 
-If you don't want to use the default mocks that are generated, you can set your oen values:
+If you don't want to use the default mocks that are generated, you can set your own values:
 ```c#
 var myDependencyA = new DependencyA();
 var myDependencyB = Substitute.For<IDependencyB>();
