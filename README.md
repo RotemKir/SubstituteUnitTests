@@ -50,6 +50,7 @@ public class MyClassTests : SubstituteUnitTestBase<MyClass>
 ```
 
 T can be any class that has only interfaces in its ctor or none at all.
+
 Now you can call CreateUnit to create the object of the test:
 This method will find the most relevant Ctor and initialize it by creating substitutes (using NSubstitute) for each interface parameter.
 
@@ -68,5 +69,22 @@ CreateUnit(setupHelper =>
     setupHelper.Get<IDependencyA>().Work().Returns(35);
     // Get ctor parameter by name:
     setupHelper.Get<IDependencyB>("dependencyB").Work().Returns(49);
+});
+```
+
+If you don't want to use the default mocks that are generated, you can set your oen values:
+```c#
+var myDependencyA = new DependencyA();
+var myDependencyB = Substitute.For<IDependencyB>();
+
+// Setup the unit test:
+CreateUnit(setupHelper =>
+{
+    // Set ctor parameter by type:              
+    setupHelper.Set(myDependencyA);
+    // Set ctor parameter by name:
+    setupHelper.Set<IDependencyB>("dependencyB");
+	// Set ctor parameter and use the return value to continue the setup:
+    setupHelper.Set<IDependencyB>("dependencyB").Work().Returns(49);
 });
 ```
