@@ -74,7 +74,9 @@ CreateUnit(setupHelper =>
 
 If you don't want to use the default mocks that are generated, you can set your own values:
 ```c#
+// Concrete implementation:
 var myDependencyA = new DependencyA();
+// Some type of mock:
 var myDependencyB = Substitute.For<IDependencyB>();
 
 // Setup the unit test:
