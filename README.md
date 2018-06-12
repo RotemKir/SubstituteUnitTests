@@ -84,7 +84,7 @@ CreateUnit(setupHelper =>
     setupHelper.Set(myDependencyA);
     // Set ctor parameter by name:
     setupHelper.Set<IDependencyB>("dependencyB");
-	// Set ctor parameter and use the return value to continue the setup:
+    // Set ctor parameter and use the return value to continue the setup:
     setupHelper.Set<IDependencyB>("dependencyB").Work().Returns(49);
 });
 ```
