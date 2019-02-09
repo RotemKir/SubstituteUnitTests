@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>RotemK.SubstituteUnitTests</id>
+    <version>1.0.0</version>
+    <title>SubstituteUnitTests</title>
+    <authors>RotemK</authors>
+    <owners>RotemK</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/RotemKir/SubstituteUnitTests</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A simple framework for unit tests using substitutes for dependencies</description>
+    <copyright>Copyright 2019</copyright>
+    <tags>unittests NSubstitute</tags>
+    <repository type="github" url="https://github.com/RotemKir/SubstituteUnitTests"/>
+  </metadata>
+</package>
