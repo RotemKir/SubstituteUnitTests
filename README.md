@@ -72,9 +72,11 @@ CreateUnit(setupHelper =>
 });
 ```
 
-If you don't want to use the default mocks that are generated, you can set your oen values:
+If you don't want to use the default mocks that are generated, you can set your own values:
 ```c#
+// Concrete implementation:
 var myDependencyA = new DependencyA();
+// Some type of mock:
 var myDependencyB = Substitute.For<IDependencyB>();
 
 // Setup the unit test:
@@ -84,7 +86,7 @@ CreateUnit(setupHelper =>
     setupHelper.Set(myDependencyA);
     // Set ctor parameter by name:
     setupHelper.Set<IDependencyB>("dependencyB");
-	// Set ctor parameter and use the return value to continue the setup:
+    // Set ctor parameter and use the return value to continue the setup:
     setupHelper.Set<IDependencyB>("dependencyB").Work().Returns(49);
 });
 ```
